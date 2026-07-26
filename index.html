@@ -932,8 +932,7 @@
         //  ─────────────────────────────────────────────────────────
         //  function doPost(e) {
         //    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-        //    const data = JSON.parse(e.postData.contents);
-        //    sheet.appendRow([data.name, data.school, data.message, data.timestamp, new Date()]);
+        //    sheet.appendRow([e.parameter.name, e.parameter.school, e.parameter.message, e.parameter.timestamp, new Date()]);
         //    return ContentService.createTextOutput(JSON.stringify({status:"success"}))
         //      .setMimeType(ContentService.MimeType.JSON);
         //  }
@@ -964,13 +963,19 @@
 
             // Send to Google Sheet (if deployed)
             if (GOOGLE_SCRIPT_URL) {
+                // Use URLSearchParams for no-cors compatibility
+                const formBody = new URLSearchParams();
+                formBody.append('name', data.name);
+                formBody.append('school', data.school);
+                formBody.append('message', data.message);
+                formBody.append('timestamp', data.timestamp);
+
                 fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: formBody
                 }).catch(() => {
-                    // silent fallback — mailto will be the delivery guarantee
+                    // silent fallback — mailto is the delivery guarantee
                 });
             }
 
