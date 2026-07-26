@@ -979,19 +979,15 @@
                 });
             }
 
-            // Show success state
+            // Show success state, then reset for next query
+            const formEls = form.elements;
             form.style.display = 'none';
             document.getElementById('formSuccess').classList.add('show');
-
-            // Open mailto as delivery guarantee (works every time)
-            const mailBody = encodeURIComponent(
-                `New Cortex Inquiry\n\n` +
-                `Name: ${data.name}\n` +
-                `School: ${data.school}\n` +
-                `Message: ${data.message}\n` +
-                `Submitted: ${data.timestamp}`
-            );
-            window.location.href = `mailto:creationx1310@gmail.com?subject=Cortex Inquiry - ${data.name}&body=${mailBody}`;
+            setTimeout(() => {
+                document.getElementById('formSuccess').classList.remove('show');
+                form.reset();
+                form.style.display = '';
+            }, 1800);
         }
     </script>
 </body>
