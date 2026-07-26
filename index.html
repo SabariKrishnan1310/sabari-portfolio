@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sabari Krishnan | System Architect</title>
+    <title>Sabari Krishnan | Student Developer</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +78,7 @@
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            z-index: 9999;
+            z-index: 10001;
             transform: translate(-50%, -50%);
             transition: width 0.3s, height 0.3s;
             mix-blend-mode: var(--cursor-blend);
@@ -90,7 +90,7 @@
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            z-index: 9999;
+            z-index: 10001;
             transform: translate(-50%, -50%);
         }
         
@@ -572,6 +572,16 @@
             50% { transform: translateY(-10px); }
         }
 
+        /* Input cursor override — show default cursor on form fields */
+        .form-group input,
+        .form-group textarea,
+        .form-submit,
+        .cortex-btn,
+        .modal-close,
+        .theme-switch {
+            cursor: auto;
+        }
+
         /* Responsiveness */
         @media (max-width: 768px) {
             .hero h1 { font-size: 3.5rem; }
@@ -599,7 +609,7 @@
     <!-- ===== HERO ===== -->
     <section class="hero">
         <h1 data-text="SABARI KRISHNAN">SABARI<br>KRISHNAN</h1>
-        <div class="hero-subtitle">System Architect</div>
+        <div class="hero-subtitle">Student Developer</div>
         <div class="hero-meta">
             <span>Django 5</span>
             <span>PostgreSQL 16</span>
@@ -626,9 +636,6 @@
                 </p>
                 <div class="school-badge">
                     <span>Grade <strong>9</strong> at <strong>DPS ECity</strong></span>
-                    <span>CBSE · <strong>NCERT</strong></span>
-                    <span>AI <strong>Sub-code 417</strong></span>
-                    <span>NERDSphere <strong>· INMO</strong></span>
                 </div>
             </div>
         </div>
@@ -901,9 +908,44 @@
             if (e.key === 'Escape') closeCortexModal();
         });
 
+        // Hide custom cursor when typing in form fields
+        document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => {
+            el.addEventListener('focus', () => {
+                cursor.style.display = 'none';
+                dot.style.display = 'none';
+            });
+            el.addEventListener('blur', () => {
+                cursor.style.display = '';
+                dot.style.display = '';
+            });
+        });
+
         // ===== 5. CORTEX FORM SUBMISSION =====
-        // Stores submissions locally and sends via email link.
-        // For a persistent backend, swap the fetch URL to your endpoint.
+        // ═══════════════════════════════════════════════════════════
+        //  SETUP: Deploy a Google Apps Script to receive submissions
+        // ═══════════════════════════════════════════════════════════
+        //  1. Create a Google Sheet with headers: Name, School, Message, Timestamp
+        //  2. Extensions → Apps Script → paste code below → Deploy as Web App
+        //  3. Copy the web app URL → paste it below as GOOGLE_SCRIPT_URL
+        //
+        //  APPS SCRIPT CODE (paste in Extensions > Apps Script):
+        //  ─────────────────────────────────────────────────────────
+        //  function doPost(e) {
+        //    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+        //    const data = JSON.parse(e.postData.contents);
+        //    sheet.appendRow([data.name, data.school, data.message, data.timestamp, new Date()]);
+        //    return ContentService.createTextOutput(JSON.stringify({status:"success"}))
+        //      .setMimeType(ContentService.MimeType.JSON);
+        //  }
+        //
+        //  function doGet(e) {
+        //    return ContentService.createTextOutput(JSON.stringify({status:"ok"}))
+        //      .setMimeType(ContentService.MimeType.JSON);
+        //  }
+        // ═══════════════════════════════════════════════════════════
+
+        const GOOGLE_SCRIPT_URL = ''; // ← Paste your Web App URL here
+
         function handleCortexSubmit(event) {
             event.preventDefault();
 
@@ -915,16 +957,28 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Save to localStorage (persists across sessions)
+            // Save to localStorage (always)
             const submissions = JSON.parse(localStorage.getItem('cortex_inquiries') || '[]');
             submissions.push(data);
             localStorage.setItem('cortex_inquiries', JSON.stringify(submissions));
+
+            // Send to Google Sheet (if deployed)
+            if (GOOGLE_SCRIPT_URL) {
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).catch(() => {
+                    // silent fallback — mailto will be the delivery guarantee
+                });
+            }
 
             // Show success state
             form.style.display = 'none';
             document.getElementById('formSuccess').classList.add('show');
 
-            // Also open default mail client as a delivery guarantee
+            // Open mailto as delivery guarantee (works every time)
             const mailBody = encodeURIComponent(
                 `New Cortex Inquiry\n\n` +
                 `Name: ${data.name}\n` +
@@ -932,11 +986,7 @@
                 `Message: ${data.message}\n` +
                 `Submitted: ${data.timestamp}`
             );
-            // Uncomment below to also send via email on each submission:
-            // window.open(`mailto:creationx1310@gmail.com?subject=Cortex Inquiry - ${data.name}&body=${mailBody}`, '_blank');
-
-            // Optional: reset form after 3s for next use
-            // (hidden in success state — user can reload page)
+            window.location.href = `mailto:creationx1310@gmail.com?subject=Cortex Inquiry - ${data.name}&body=${mailBody}`;
         }
     </script>
 </body>
